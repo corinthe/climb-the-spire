@@ -40,8 +40,72 @@ export function slimeSVG() {
   </svg>`;
 }
 
+export function batSVG() {
+  return `<svg viewBox="0 0 150 120" class="sprite-svg" aria-label="Chauve-souris">
+    <ellipse cx="75" cy="110" rx="34" ry="7" fill="#000" opacity=".18"/>
+    <path d="M75 50 q-50 -34 -64 -6 q24 -2 24 14 q12 -10 40 -8 z" fill="#6b4bb0" stroke="${OUT}" stroke-width="4"/>
+    <path d="M75 50 q50 -34 64 -6 q-24 -2 -24 14 q-12 -10 -40 -8 z" fill="#6b4bb0" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="75" cy="62" rx="26" ry="24" fill="#7d5fff" stroke="${OUT}" stroke-width="4"/>
+    <path d="M58 40 l6 14 l-14 -6 z" fill="#7d5fff" stroke="${OUT}" stroke-width="3"/>
+    <path d="M92 40 l-6 14 l14 -6 z" fill="#7d5fff" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="66" cy="60" r="5" fill="#fff"/><circle cx="84" cy="60" r="5" fill="#fff"/>
+    <circle cx="67" cy="61" r="2.5" fill="${OUT}"/><circle cx="85" cy="61" r="2.5" fill="${OUT}"/>
+    <path d="M68 74 l4 5 l4 -5 l4 5 l4 -5" fill="none" stroke="${OUT}" stroke-width="3" stroke-linecap="round"/>
+  </svg>`;
+}
+
+export function golemSVG() {
+  return `<svg viewBox="0 0 130 130" class="sprite-svg" aria-label="Golem">
+    <ellipse cx="65" cy="122" rx="42" ry="8" fill="#000" opacity=".18"/>
+    <rect x="26" y="44" width="78" height="68" rx="12" fill="#9aa7b4" stroke="${OUT}" stroke-width="5"/>
+    <rect x="14" y="58" width="16" height="40" rx="6" fill="#869"  stroke="${OUT}" stroke-width="4" fill="#7e8a98"/>
+    <rect x="100" y="58" width="16" height="40" rx="6" fill="#7e8a98" stroke="${OUT}" stroke-width="4"/>
+    <rect x="40" y="60" width="18" height="18" rx="4" fill="#cfd6de" stroke="${OUT}" stroke-width="3"/>
+    <rect x="72" y="60" width="18" height="18" rx="4" fill="#cfd6de" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="49" cy="69" r="4" fill="${OUT}"/><circle cx="81" cy="69" r="4" fill="${OUT}"/>
+    <path d="M48 94 h34" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M40 30 l8 14 M65 26 v18 M90 30 l-8 14" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>
+  </svg>`;
+}
+
+export function bruteSVG() {
+  return `<svg viewBox="0 0 130 140" class="sprite-svg" aria-label="Brute">
+    <ellipse cx="65" cy="130" rx="40" ry="8" fill="#000" opacity=".18"/>
+    <path d="M28 78 q37 -18 74 0 l6 42 q-43 16 -86 0 z" fill="#4a8a3d" stroke="${OUT}" stroke-width="5"/>
+    <circle cx="65" cy="48" r="30" fill="#5fb04d" stroke="${OUT}" stroke-width="5"/>
+    <path d="M40 36 l-12 -8 M90 36 l12 -8" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="54" cy="48" r="5" fill="#fff"/><circle cx="76" cy="48" r="5" fill="#fff"/>
+    <circle cx="55" cy="49" r="2.5" fill="${OUT}"/><circle cx="77" cy="49" r="2.5" fill="${OUT}"/>
+    <path d="M50 64 q15 8 30 0" fill="none" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M56 62 l-2 8 M74 62 l2 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <rect x="96" y="36" width="10" height="60" rx="4" fill="#a9743a" stroke="${OUT}" stroke-width="4"/>
+    <rect x="86" y="26" width="30" height="22" rx="6" fill="#9aa7b4" stroke="${OUT}" stroke-width="4"/>
+  </svg>`;
+}
+
+export function guardianSVG() {
+  return `<svg viewBox="0 0 150 150" class="sprite-svg" aria-label="Gardien">
+    <ellipse cx="75" cy="140" rx="50" ry="9" fill="#000" opacity=".2"/>
+    <path d="M30 80 q45 -22 90 0 l8 50 q-53 18 -106 0 z" fill="#c79a2e" stroke="${OUT}" stroke-width="5"/>
+    <path d="M44 92 h62 v8 h-62z" fill="#fff3c4" opacity=".6"/>
+    <circle cx="75" cy="50" r="34" fill="#e9c45a" stroke="${OUT}" stroke-width="5"/>
+    <path d="M41 50 a34 34 0 0 1 68 0 z" fill="#b98a22" stroke="${OUT}" stroke-width="5"/>
+    <path d="M52 18 l6 18 M75 12 v24 M98 18 l-6 18" stroke="${OUT}" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="62" cy="54" r="6" fill="#fff"/><circle cx="88" cy="54" r="6" fill="#fff"/>
+    <circle cx="63" cy="55" r="3" fill="#e2574c"/><circle cx="89" cy="55" r="3" fill="#e2574c"/>
+    <path d="M60 72 q15 8 30 0" fill="none" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>
+  </svg>`;
+}
+
 export function spriteSVG(art) {
-  return art === 'slime' ? slimeSVG() : heroSVG();
+  switch (art) {
+    case 'slime': return slimeSVG();
+    case 'bat': return batSVG();
+    case 'golem': return golemSVG();
+    case 'brute': return bruteSVG();
+    case 'guardian': return guardianSVG();
+    default: return heroSVG();
+  }
 }
 
 // --- Icônes de cartes ---------------------------------------------------
@@ -58,6 +122,9 @@ export function cardArtSVG(art) {
   if (art === 'hammer') return wrap(`
     <rect x="16" y="14" width="32" height="18" rx="4" fill="#9aa7b4" stroke="${OUT}" stroke-width="3"/>
     <rect x="29" y="30" width="6" height="26" rx="2" fill="#a9743a" stroke="${OUT}" stroke-width="3"/>`);
+  if (art === 'flame') return wrap(`
+    <path d="M32 6 q14 16 14 30 a14 14 0 0 1 -28 0 q0 -10 14 -30z" fill="#ff8a3d" stroke="${OUT}" stroke-width="3"/>
+    <path d="M32 24 q7 8 7 14 a7 7 0 0 1 -14 0 q0 -5 7 -14z" fill="#ffd84d"/>`);
   return wrap('');
 }
 
@@ -79,5 +146,12 @@ export function relicSVG(art) {
     <rect x="14" y="10" width="5" height="10" rx="2" fill="#e2574c" stroke="${OUT}" stroke-width="2"/>
     <rect x="21" y="8" width="5" height="12" rx="2" fill="#e2574c" stroke="${OUT}" stroke-width="2"/>
     <rect x="28" y="10" width="5" height="10" rx="2" fill="#e2574c" stroke="${OUT}" stroke-width="2"/>`);
+  if (art === 'ember') return wrap(`
+    <path d="M24 6 q14 14 14 26 a14 14 0 0 1 -28 0 q0 -10 14 -26z" fill="#ff5a1f" stroke="${OUT}" stroke-width="3"/>
+    <path d="M24 22 q6 7 6 12 a6 6 0 0 1 -12 0 q0 -5 6 -12z" fill="#ffd84d"/>`);
+  if (art === 'tower') return wrap(`
+    <path d="M10 12 q14 -6 28 0 v16 q-14 18 -28 0z" fill="#6b7a8d" stroke="${OUT}" stroke-width="3"/>
+    <rect x="21" y="14" width="6" height="22" rx="2" fill="#cfd6de"/>
+    <rect x="14" y="16" width="20" height="6" rx="2" fill="#cfd6de"/>`);
   return wrap('');
 }

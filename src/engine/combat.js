@@ -9,28 +9,31 @@ let _uid = 1;
 const instance = (defId) => ({ uid: _uid++, defId });
 
 // --- Création d'un combat -----------------------------------------------
-export function newCombat({ seed, relics = [], enemyId = 'slime', maxHp = 60 }) {
-  const rng = makeRng(seed);
+// Accepte un `rng` (fourni par le run pour rester déterministe) ou une `seed`.
+// `deck`, `hp`, `maxHp` et `relics` proviennent du run et persistent entre combats.
+export function newCombat({ seed, rng, relics = [], enemyId = 'slime', deck = STARTING_DECK, hp = null, maxHp = 60 }) {
+  rng = rng || makeRng(seed);
   const enemyDef = ENEMIES[enemyId];
   const state = {
     rng,
-    seed,
+    seed: seed ?? rng.seed,
     phase: 'combat', // 'combat' | 'won' | 'lost'
     turn: 'player',
     turnCount: 0,
     energy: { cur: 3, max: 3 },
     relics: relics.slice(),
-    player: { name: 'Héros', hp: maxHp, maxHp, block: 0, statuses: {} },
+    player: { name: 'Héros', hp: hp == null ? maxHp : hp, maxHp, block: 0, statuses: {}, art: 'hero' },
     enemy: {
       id: enemyId, name: enemyDef.name, hp: enemyDef.maxHp, maxHp: enemyDef.maxHp,
       block: 0, statuses: {}, patternIndex: 0, intent: null, art: enemyDef.art,
+      tier: enemyDef.tier || 'normal',
     },
     draw: [],
     hand: [],
     discard: [],
     log: [],
   };
-  state.draw = rng.shuffle(STARTING_DECK.map(instance));
+  state.draw = rng.shuffle(deck.map(instance));
   setEnemyIntent(state);
   startPlayerTurn(state);
   return state;
