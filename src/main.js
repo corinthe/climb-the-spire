@@ -3,6 +3,7 @@ import { playCard, endTurn } from './engine/combat.js';
 import {
   newRun, enterNode, onCombatResolved,
   chooseRewardCard, chooseRelic, skipReward, doRest, chooseEventOption,
+  doForge, leaveForge,
 } from './engine/run.js';
 import { render } from './ui/render.js';
 
@@ -18,6 +19,7 @@ const app = {
   reward: null,
   event: null,
   currentNode: null,
+  forgeSelection: [],
 };
 
 function randomSeed() {
@@ -32,6 +34,7 @@ function startRun(newSeed) {
   app.run = newRun(seed);
   app.scene = 'map';
   app.combat = app.reward = app.event = app.currentNode = null;
+  app.forgeSelection = [];
   draw();
 }
 
@@ -72,6 +75,16 @@ root.addEventListener('click', (e) => {
   if (action === 'pick-relic') { chooseRelic(app, el.dataset.relic); return draw(); }
   if (action === 'skip-reward') { skipReward(app); return draw(); }
   if (action === 'rest') { doRest(app); return draw(); }
+  if (action === 'forge-select') {
+    const idx = Number(el.dataset.idx);
+    const sel = app.forgeSelection;
+    const pos = sel.indexOf(idx);
+    if (pos >= 0) sel.splice(pos, 1);
+    else if (sel.length < 2) sel.push(idx);
+    return draw();
+  }
+  if (action === 'forge') { doForge(app, app.forgeSelection[0], app.forgeSelection[1]); return draw(); }
+  if (action === 'leave-forge') { leaveForge(app); return draw(); }
   if (action === 'event-opt') { chooseEventOption(app, Number(el.dataset.opt)); return draw(); }
   if (action === 'restart') { return startRun(seed); }
   if (action === 'newseed') {

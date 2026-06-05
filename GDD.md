@@ -57,8 +57,9 @@ pure et déterministe, séparée du rendu** (dossier `engine/`), pilotée par se
 | Stack | JS vanilla + SVG |
 
 ## Roadmap
-- [x] **Jalon 1 — Un combat jouable** (moteur + UI + objets en direct).
-- [ ] Jalon 2 — Map à embranchements + récompenses (cartes & objets).
-- [ ] Jalon 3 — Forge (fusion d'objets), Repos, Boutique, Événements.
-- [ ] Jalon 4 — Plusieurs ennemis, élites, boss.
-- [ ] Jalon 5 — Coop réseau.
+- [x] **Jalon 1 — Un combat jouable** (moteur + UI + objets).
+- [x] **Jalon 2 — Map à embranchements + récompenses** (cartes & objets, repos, événements, élites, boss).
+- [x] **Jalon 3 — Forge** (fusion d'objets : recettes + amalgames génériques, fusions en chaîne).
+- [ ] Jalon 4 — Plus de profondeur de combat (multi-ennemis, plus d'objets/cartes), boutique.
+- [ ] Jalon 5 — Polish (animations, sons) & équilibrage.
+- [ ] Jalon 6 — Coop réseau.

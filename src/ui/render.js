@@ -1,6 +1,6 @@
 // Rendu DOM — dispatcher de scènes. Lit l'état (app) et le dessine.
 // Aucune règle de jeu ici : tout vient du moteur (engine/).
-import { CARDS, RELICS, STATUSES, EVENTS } from '../engine/content.js';
+import { CARDS, RELICS, STATUSES, EVENTS, fusionPreview } from '../engine/content.js';
 import { previewCard, enemyIntentPreview } from '../engine/combat.js';
 import { reachableNodes } from '../engine/run.js';
 import { spriteSVG, cardArtSVG, relicSVG } from './assets.js';
@@ -12,6 +12,7 @@ const NODE_META = {
   elite:    { icon: '💀', label: 'Élite' },
   event:    { icon: '❓', label: 'Événement' },
   rest:     { icon: '🔥', label: 'Repos' },
+  forge:    { icon: '⚒️', label: 'Forge' },
   treasure: { icon: '💎', label: 'Trésor' },
   boss:     { icon: '👑', label: 'Boss' },
 };
@@ -24,6 +25,7 @@ export function render(root, app) {
     case 'combat': body = combatView(app); break;
     case 'reward': body = rewardView(app); break;
     case 'rest': body = restView(app); break;
+    case 'forge': body = forgeView(app); break;
     case 'event': body = eventView(app); break;
     case 'gameover': body = endView(app, false); break;
     case 'victory': body = endView(app, true); break;
@@ -216,6 +218,49 @@ function restView(app) {
     <div class="campfire">🔥</div>
     <p>Tu te reposes près du feu et récupères <b>${heal} PV</b> (actuellement ${run.hp}/${run.maxHp}).</p>
     <button class="btn big" data-action="rest">Se reposer</button>
+  </section>`;
+}
+
+// --- Vue FORGE ----------------------------------------------------------
+function forgeView(app) {
+  const run = app.run;
+  const sel = app.forgeSelection || [];
+
+  if (run.relics.length < 2) {
+    return `<section class="panel forge">
+      <h2>⚒️ La Forge</h2>
+      <p>Il te faut <b>au moins 2 objets</b> pour forger. Reviens quand tu en auras davantage.</p>
+      <button class="btn big" data-action="leave-forge">Quitter la forge</button>
+    </section>`;
+  }
+
+  const owned = run.relics.map((id, i) => {
+    const r = RELICS[id];
+    const on = sel.includes(i);
+    return `<button class="relic-pick ${on ? 'on' : ''} ${r.fused ? 'is-fused' : ''}" data-action="forge-select" data-idx="${i}">
+      ${relicSVG(r.art)}<b>${esc(r.name)}</b><span>${esc(r.text)}</span>${on ? '<em>✓</em>' : ''}</button>`;
+  }).join('');
+
+  let previewBlock = `<p class="forge-hint">Sélectionne <b>2 objets</b> à fusionner.</p>`;
+  let canForge = false;
+  if (sel.length === 2) {
+    const res = fusionPreview(run.relics[sel[0]], run.relics[sel[1]]);
+    canForge = true;
+    previewBlock = `<div class="forge-result">
+      <div class="forge-eq">${relicSVG(RELICS[run.relics[sel[0]]].art)} <span>+</span> ${relicSVG(RELICS[run.relics[sel[1]]].art)} <span>=</span></div>
+      <div class="forge-out">${relicSVG(res.art)}<b>${esc(res.name)}</b><span>${esc(res.text)}</span></div>
+    </div>`;
+  }
+
+  return `<section class="panel forge">
+    <h2>⚒️ La Forge</h2>
+    <p class="muted">Combine deux objets en un objet supérieur. Les deux objets d'origine sont consommés.</p>
+    <div class="relic-pick-grid">${owned}</div>
+    ${previewBlock}
+    <div class="forge-actions">
+      <button class="btn big" data-action="forge" ${canForge ? '' : 'disabled'}>🔨 Forger</button>
+      <button class="btn" data-action="leave-forge">Quitter sans forger</button>
+    </div>
   </section>`;
 }
 

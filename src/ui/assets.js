@@ -153,5 +153,13 @@ export function relicSVG(art) {
     <path d="M10 12 q14 -6 28 0 v16 q-14 18 -28 0z" fill="#6b7a8d" stroke="${OUT}" stroke-width="3"/>
     <rect x="21" y="14" width="6" height="22" rx="2" fill="#cfd6de"/>
     <rect x="14" y="16" width="20" height="6" rx="2" fill="#cfd6de"/>`);
+  if (art === 'fused') return wrap(`
+    <path d="M24 6 l5 12 l13 1 l-10 9 l3 13 l-11 -7 l-11 7 l3 -13 l-10 -9 l13 -1 z"
+          fill="#ffd84d" stroke="${OUT}" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="24" cy="22" r="4" fill="#fff7e6"/>`);
+  if (art === 'amalgam') return wrap(`
+    <circle cx="18" cy="26" r="12" fill="#7d5fff" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="30" cy="22" r="12" fill="#5fd35f" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="24" cy="24" r="5" fill="#fff" opacity=".8"/>`);
   return wrap('');
 }

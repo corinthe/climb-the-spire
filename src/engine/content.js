@@ -138,7 +138,133 @@ export const RELICS = {
       return effects.map((e) => (e.type === 'block' ? { ...e, amount: e.amount + 3 } : e));
     },
   },
+
+  // --- OBJETS FUSIONNÉS (issus de la Forge) ---
+  executioner: {
+    id: 'executioner', name: 'Lame du Bourreau', art: 'fused', fused: true, from: ['katana', 'gauntlet'],
+    text: 'Vos attaques frappent deux fois ET infligent +3 dégâts par coup.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      const boosted = effects.map((e) => (e.type === 'damage' ? { ...e, amount: e.amount + 3 } : e));
+      const extra = boosted.filter((e) => e.type === 'damage').map((e) => ({ ...e }));
+      return boosted.concat(extra);
+    },
+  },
+  plaguebrand: {
+    id: 'plaguebrand', name: 'Sceau de Peste', art: 'fused', fused: true, from: ['venomblade', 'emberheart'],
+    text: 'Vos attaques appliquent 3 Poison et 3 Brûlure.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      return effects.concat([
+        { type: 'status', status: 'poison', amount: 3, target: 'enemy' },
+        { type: 'status', status: 'burn', amount: 3, target: 'enemy' },
+      ]);
+    },
+  },
+  aegis: {
+    id: 'aegis', name: "Égide de l'Ours", art: 'fused', fused: true, from: ['beargrease', 'towershield'],
+    text: '+4 blocs en défense ET vos attaques appliquent 1 Faiblesse.',
+    modifyEffects(card, effects) {
+      let e = effects.map((x) => (x.type === 'block' ? { ...x, amount: x.amount + 4 } : x));
+      if (card.type === 'attack') e = e.concat([{ type: 'status', status: 'weak', amount: 1, target: 'enemy' }]);
+      return e;
+    },
+  },
+  serpentfang: {
+    id: 'serpentfang', name: 'Croc du Serpent', art: 'fused', fused: true, from: ['katana', 'venomblade'],
+    text: 'Vos attaques frappent deux fois ET appliquent 2 Poison.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      const extra = effects.filter((e) => e.type === 'damage').map((e) => ({ ...e }));
+      return effects.concat(extra).concat([{ type: 'status', status: 'poison', amount: 2, target: 'enemy' }]);
+    },
+  },
+  magmafist: {
+    id: 'magmafist', name: 'Poing de Magma', art: 'fused', fused: true, from: ['gauntlet', 'emberheart'],
+    text: '+3 dégâts par coup ET vos attaques appliquent 2 Brûlure.',
+    modifyEffects(card, effects) {
+      let e = effects.map((x) => (x.type === 'damage' ? { ...x, amount: x.amount + 3 } : x));
+      if (card.type === 'attack') e = e.concat([{ type: 'status', status: 'burn', amount: 2, target: 'enemy' }]);
+      return e;
+    },
+  },
+  twinfang: {
+    id: 'twinfang', name: 'Double Croc', art: 'fused', fused: true, from: ['katana', 'beargrease'],
+    text: 'Vos attaques frappent deux fois ET appliquent 1 Faiblesse.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      const extra = effects.filter((e) => e.type === 'damage').map((e) => ({ ...e }));
+      return effects.concat(extra).concat([{ type: 'status', status: 'weak', amount: 1, target: 'enemy' }]);
+    },
+  },
+  bulwark: {
+    id: 'bulwark', name: 'Rempart', art: 'fused', fused: true, from: ['gauntlet', 'towershield'],
+    text: '+2 dégâts par coup ET +4 blocs en défense.',
+    modifyEffects(card, effects) {
+      return effects.map((e) => {
+        if (e.type === 'damage') return { ...e, amount: e.amount + 2 };
+        if (e.type === 'block') return { ...e, amount: e.amount + 4 };
+        return e;
+      });
+    },
+  },
+  corrosion: {
+    id: 'corrosion', name: 'Corrosion', art: 'fused', fused: true, from: ['venomblade', 'beargrease'],
+    text: 'Vos attaques appliquent 3 Poison et 1 Faiblesse.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      return effects.concat([
+        { type: 'status', status: 'poison', amount: 3, target: 'enemy' },
+        { type: 'status', status: 'weak', amount: 1, target: 'enemy' },
+      ]);
+    },
+  },
 };
+
+// --- RECETTES DE FUSION -------------------------------------------------
+// Clé = paire d'objets triée (id+id) ; valeur = objet fusionné obtenu.
+export const RECIPES = {
+  'gauntlet+katana': 'executioner',
+  'emberheart+venomblade': 'plaguebrand',
+  'beargrease+towershield': 'aegis',
+  'katana+venomblade': 'serpentfang',
+  'emberheart+gauntlet': 'magmafist',
+  'beargrease+katana': 'twinfang',
+  'gauntlet+towershield': 'bulwark',
+  'beargrease+venomblade': 'corrosion',
+};
+
+// Calcule l'objet résultant de la fusion de deux objets.
+// - Paire connue => objet fusionné dédié (recette).
+// - Sinon => "Amalgame" générique : enchaîne les deux effets + bonus universel.
+// Déterministe (aucun hasard) ; enregistre l'amalgame généré dans RELICS.
+export function fusionResult(a, b) {
+  const key = [a, b].sort().join('+');
+  if (RECIPES[key]) return RECIPES[key];
+
+  const [x, y] = [a, b].sort();
+  const id = `amalgam__${x}__${y}`;
+  if (!RELICS[id]) {
+    const ra = RELICS[x], rb = RELICS[y];
+    RELICS[id] = {
+      id, art: 'amalgam', fused: true, from: [x, y],
+      name: `Amalgame : ${ra.name} + ${rb.name}`,
+      text: `${ra.text} ${rb.text} Et +1 dégât par coup.`,
+      modifyEffects(card, effects) {
+        let e = effects;
+        if (ra.modifyEffects) e = ra.modifyEffects(card, e);
+        if (rb.modifyEffects) e = rb.modifyEffects(card, e);
+        return e.map((x2) => (x2.type === 'damage' ? { ...x2, amount: x2.amount + 1 } : x2));
+      },
+    };
+  }
+  return id;
+}
+
+// Aperçu (sans consommer) de l'objet résultant.
+export function fusionPreview(a, b) {
+  return RELICS[fusionResult(a, b)];
+}
 
 // --- ENNEMIS ------------------------------------------------------------
 // L'ennemi suit un `pattern` cyclique d'intentions, télégraphiées au joueur.

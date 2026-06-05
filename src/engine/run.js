@@ -7,7 +7,7 @@ import { makeRng } from './rng.js';
 import { generateMap, getNode } from './map.js';
 import { newCombat } from './combat.js';
 import {
-  STARTING_DECK, RELICS, ENEMY_POOLS, REWARD_CARD_IDS, EVENTS, EVENT_IDS,
+  STARTING_DECK, RELICS, ENEMY_POOLS, REWARD_CARD_IDS, EVENTS, EVENT_IDS, fusionResult,
 } from './content.js';
 
 export const MAX_HP = 60;
@@ -62,6 +62,9 @@ export function enterNode(app, nodeId) {
     app.scene = 'combat';
   } else if (node.type === 'rest') {
     app.scene = 'rest';
+  } else if (node.type === 'forge') {
+    app.forgeSelection = [];
+    app.scene = 'forge';
   } else if (node.type === 'event') {
     app.event = nodeRng(run, nodeId, 'event').pick(EVENT_IDS);
     app.scene = 'event';
@@ -111,6 +114,25 @@ export function chooseRelic(app, relicId) {
 }
 
 export function skipReward(app) {
+  finishNode(app);
+}
+
+// --- Forge --------------------------------------------------------------
+// Fusionne deux objets possédés (par index) en un objet supérieur.
+export function doForge(app, i, j) {
+  const run = app.run;
+  if (i === j || run.relics[i] == null || run.relics[j] == null) return;
+  const fused = fusionResult(run.relics[i], run.relics[j]);
+  const [hi, lo] = i > j ? [i, j] : [j, i];
+  run.relics.splice(hi, 1);
+  run.relics.splice(lo, 1);
+  run.relics.push(fused);
+  app.forgeSelection = [];
+  finishNode(app);
+}
+
+export function leaveForge(app) {
+  app.forgeSelection = [];
   finishNode(app);
 }
 
