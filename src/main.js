@@ -1,9 +1,9 @@
 // Point d'entrée — relie le moteur du run (engine/) au rendu (ui/).
-import { playCard, endTurn } from './engine/combat.js';
+import { playCard, endTurn, setTarget } from './engine/combat.js';
 import {
   newRun, enterNode, onCombatResolved,
   chooseRewardCard, chooseRelic, skipReward, doRest, chooseEventOption,
-  doForge, leaveForge,
+  doForge, leaveForge, buyShopItem, leaveShop,
 } from './engine/run.js';
 import { render } from './ui/render.js';
 
@@ -18,6 +18,7 @@ const app = {
   combat: null,
   reward: null,
   event: null,
+  shop: null,
   currentNode: null,
   forgeSelection: [],
 };
@@ -33,7 +34,7 @@ function startRun(newSeed) {
   history.replaceState(null, '', url);
   app.run = newRun(seed);
   app.scene = 'map';
-  app.combat = app.reward = app.event = app.currentNode = null;
+  app.combat = app.reward = app.event = app.shop = app.currentNode = null;
   app.forgeSelection = [];
   draw();
 }
@@ -57,6 +58,10 @@ root.addEventListener('click', (e) => {
   // --- MAP ---
   const node = e.target.closest('.mapnode[data-node]');
   if (node && !node.disabled) { enterNode(app, node.dataset.node); return draw(); }
+
+  // --- COMBAT : choisir une cible ---
+  const foe = e.target.closest('.enemy[data-enemy]');
+  if (foe && app.scene === 'combat') { setTarget(app.combat, foe.dataset.enemy); return draw(); }
 
   // --- COMBAT : jouer une carte ---
   const card = e.target.closest('.card[data-uid]');
@@ -85,6 +90,8 @@ root.addEventListener('click', (e) => {
   }
   if (action === 'forge') { doForge(app, app.forgeSelection[0], app.forgeSelection[1]); return draw(); }
   if (action === 'leave-forge') { leaveForge(app); return draw(); }
+  if (action === 'buy') { buyShopItem(app, Number(el.dataset.idx)); return draw(); }
+  if (action === 'leave-shop') { leaveShop(app); return draw(); }
   if (action === 'event-opt') { chooseEventOption(app, Number(el.dataset.opt)); return draw(); }
   if (action === 'restart') { return startRun(seed); }
   if (action === 'newseed') {

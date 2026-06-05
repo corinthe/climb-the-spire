@@ -7,7 +7,7 @@ import { makeRng } from './rng.js';
 import { generateMap, getNode } from './map.js';
 import { newCombat } from './combat.js';
 import {
-  STARTING_DECK, RELICS, ENEMY_POOLS, REWARD_CARD_IDS, EVENTS, EVENT_IDS, fusionResult,
+  STARTING_DECK, RELICS, ENCOUNTERS, REWARD_CARD_IDS, EVENTS, EVENT_IDS, fusionResult,
 } from './content.js';
 
 export const MAX_HP = 60;
@@ -23,6 +23,7 @@ export function newRun(seed) {
     hp: MAX_HP,
     relics: [],
     deck: STARTING_DECK.slice(),
+    gold: 0,
     map,
     nodeId: null,         // position courante (null = pas encore entré)
     completed: [],        // nœuds traversés
@@ -47,17 +48,18 @@ export function enterNode(app, nodeId) {
   app.currentNode = node;
   app.reward = null;
   app.event = null;
+  app.shop = null;
 
   if (node.type === 'combat' || node.type === 'elite' || node.type === 'boss') {
-    const pool = ENEMY_POOLS[node.type] || ENEMY_POOLS.combat;
-    const enemyId = nodeRng(run, nodeId, 'pick').pick(pool);
+    const encounters = ENCOUNTERS[node.type] || ENCOUNTERS.combat;
+    const enemies = nodeRng(run, nodeId, 'pick').pick(encounters);
     app.combat = newCombat({
       rng: nodeRng(run, nodeId, 'combat'),
       relics: run.relics,
       deck: run.deck,
       hp: run.hp,
       maxHp: run.maxHp,
-      enemyId,
+      enemies,
     });
     app.scene = 'combat';
   } else if (node.type === 'rest') {
@@ -65,6 +67,9 @@ export function enterNode(app, nodeId) {
   } else if (node.type === 'forge') {
     app.forgeSelection = [];
     app.scene = 'forge';
+  } else if (node.type === 'shop') {
+    app.shop = makeShop(run, node);
+    app.scene = 'shop';
   } else if (node.type === 'event') {
     app.event = nodeRng(run, nodeId, 'event').pick(EVENT_IDS);
     app.scene = 'event';
@@ -84,16 +89,19 @@ export function onCombatResolved(app) {
     app.scene = 'gameover';
     return;
   }
-  // Victoire → récompense
+  // Victoire → récompense (or + carte au choix, objet garanti sur élite/boss)
   const node = app.currentNode;
   const rng = nodeRng(app.run, node.id, 'reward');
+  const goldRange = node.type === 'boss' ? [40, 60] : node.type === 'elite' ? [25, 35] : [12, 20];
+  const gold = rng.int(goldRange[0], goldRange[1]);
+  app.run.gold += gold;
   const cards = rng.shuffle(REWARD_CARD_IDS).slice(0, 3);
   let relic = null;
   if (node.type === 'elite' || node.type === 'boss') {
     relic = pickNewRelic(rng, app.run);
     if (relic) app.run.relics.push(relic); // objet garanti accordé tout de suite
   }
-  app.reward = { kind: 'combat', cards, relic, isBoss: node.type === 'boss' };
+  app.reward = { kind: 'combat', cards, relic, gold, isBoss: node.type === 'boss' };
   app.scene = 'reward';
 }
 
@@ -136,6 +144,32 @@ export function leaveForge(app) {
   finishNode(app);
 }
 
+// --- Boutique -----------------------------------------------------------
+function makeShop(run, node) {
+  const rng = nodeRng(run, node.id, 'shop');
+  const cards = rng.shuffle(REWARD_CARD_IDS).slice(0, 3)
+    .map((id) => ({ kind: 'card', id, price: rng.int(40, 65), sold: false }));
+  const relics = pickRelics(rng, run, 2)
+    .map((id) => ({ kind: 'relic', id, price: rng.int(75, 110), sold: false }));
+  const heal = { kind: 'heal', amount: 25, price: rng.int(25, 40), sold: false };
+  return { kind: 'shop', items: [...relics, ...cards, heal] };
+}
+
+export function buyShopItem(app, idx) {
+  const run = app.run;
+  const item = app.shop.items[idx];
+  if (!item || item.sold || run.gold < item.price) return;
+  run.gold -= item.price;
+  item.sold = true;
+  if (item.kind === 'card') run.deck.push(item.id);
+  else if (item.kind === 'relic') { if (!run.relics.includes(item.id)) run.relics.push(item.id); }
+  else if (item.kind === 'heal') run.hp = Math.min(run.maxHp, run.hp + item.amount);
+}
+
+export function leaveShop(app) {
+  finishNode(app);
+}
+
 // --- Repos --------------------------------------------------------------
 export function doRest(app) {
   const run = app.run;
@@ -171,14 +205,19 @@ function finishNode(app) {
   app.reward = null;
   app.event = null;
   app.combat = null;
+  app.shop = null;
 }
 
 // --- Sélection d'objets -------------------------------------------------
+// Seuls les objets de BASE peuvent être trouvés/achetés (les objets fusionnés
+// ne s'obtiennent qu'à la Forge).
+const baseRelicIds = () => Object.keys(RELICS).filter((id) => !RELICS[id].fused);
+
 function pickNewRelic(rng, run) {
-  const avail = Object.keys(RELICS).filter((id) => !run.relics.includes(id));
+  const avail = baseRelicIds().filter((id) => !run.relics.includes(id));
   return avail.length ? rng.pick(avail) : null;
 }
 
 function pickRelics(rng, run, n) {
-  return rng.shuffle(Object.keys(RELICS).filter((id) => !run.relics.includes(id))).slice(0, n);
+  return rng.shuffle(baseRelicIds().filter((id) => !run.relics.includes(id))).slice(0, n);
 }

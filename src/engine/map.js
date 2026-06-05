@@ -71,6 +71,7 @@ function pickType(rng, r) {
   add('treasure', 2);
   if (r >= 2) add('rest', 3);
   if (r >= 2) add('forge', 2);
+  if (r >= 2) add('shop', 2);
   if (r >= 3) add('elite', 3);
   return rng.pick(pool);
 }

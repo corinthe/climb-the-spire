@@ -60,6 +60,6 @@ pure et déterministe, séparée du rendu** (dossier `engine/`), pilotée par se
 - [x] **Jalon 1 — Un combat jouable** (moteur + UI + objets).
 - [x] **Jalon 2 — Map à embranchements + récompenses** (cartes & objets, repos, événements, élites, boss).
 - [x] **Jalon 3 — Forge** (fusion d'objets : recettes + amalgames génériques, fusions en chaîne).
-- [ ] Jalon 4 — Plus de profondeur de combat (multi-ennemis, plus d'objets/cartes), boutique.
-- [ ] Jalon 5 — Polish (animations, sons) & équilibrage.
+- [x] **Jalon 4 — Profondeur de combat** : multi-ennemis + ciblage, attaques de zone, or & boutique, plus de cartes/objets/recettes.
+- [ ] Jalon 5 — Polish (animations, sons, transitions) & équilibrage (rencontres selon la profondeur).
 - [ ] Jalon 6 — Coop réseau.

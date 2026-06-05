@@ -64,6 +64,27 @@ export const CARDS = {
     ],
     art: 'sword',
   },
+  whirlwind: {
+    id: 'whirlwind', name: 'Tourbillon', type: 'attack', cost: 1,
+    text: 'Inflige 5 dégâts à TOUS les ennemis.',
+    effects: [{ type: 'damage', amount: 5, target: 'allEnemies' }],
+    art: 'whirl',
+  },
+  barricade: {
+    id: 'barricade', name: 'Barricade', type: 'skill', cost: 2,
+    text: 'Gagne 14 blocs.',
+    effects: [{ type: 'block', amount: 14, target: 'self' }],
+    art: 'shield',
+  },
+  rupture: {
+    id: 'rupture', name: 'Lacération', type: 'attack', cost: 1,
+    text: 'Inflige 4 dégâts et applique 3 Saignement.',
+    effects: [
+      { type: 'damage', amount: 4, target: 'enemy' },
+      { type: 'status', status: 'bleed', amount: 3, target: 'enemy' },
+    ],
+    art: 'sword',
+  },
 };
 
 // Deck de départ : volontairement simple. La puissance vient des OBJETS.
@@ -72,9 +93,10 @@ export const STARTING_DECK = [
   'defend', 'defend', 'defend', 'defend', 'defend',
 ];
 
-// Cartes proposées en récompense de combat.
+// Cartes proposées en récompense de combat / en boutique.
 export const REWARD_CARD_IDS = [
   'heavyblow', 'quickjab', 'guardstance', 'firestrike', 'venomstrike', 'hamstring',
+  'whirlwind', 'barricade', 'rupture',
 ];
 
 // --- STATUTS ------------------------------------------------------------
@@ -136,6 +158,14 @@ export const RELICS = {
     text: '+3 blocs à chaque carte de défense.',
     modifyEffects(card, effects) {
       return effects.map((e) => (e.type === 'block' ? { ...e, amount: e.amount + 3 } : e));
+    },
+  },
+  bloodspike: {
+    id: 'bloodspike', name: 'Croc Sanglant', art: 'blood',
+    text: 'Vos attaques appliquent 2 Saignement.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      return effects.concat([{ type: 'status', status: 'bleed', amount: 2, target: 'enemy' }]);
     },
   },
 
@@ -219,6 +249,26 @@ export const RELICS = {
       ]);
     },
   },
+  hemorrhage: {
+    id: 'hemorrhage', name: 'Hémorragie', art: 'fused', fused: true, from: ['bloodspike', 'venomblade'],
+    text: 'Vos attaques appliquent 3 Saignement et 3 Poison.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      return effects.concat([
+        { type: 'status', status: 'bleed', amount: 3, target: 'enemy' },
+        { type: 'status', status: 'poison', amount: 3, target: 'enemy' },
+      ]);
+    },
+  },
+  reaper: {
+    id: 'reaper', name: 'Faucheuse', art: 'fused', fused: true, from: ['bloodspike', 'katana'],
+    text: 'Vos attaques frappent deux fois ET appliquent 2 Saignement.',
+    modifyEffects(card, effects) {
+      if (card.type !== 'attack') return effects;
+      const extra = effects.filter((e) => e.type === 'damage').map((e) => ({ ...e }));
+      return effects.concat(extra).concat([{ type: 'status', status: 'bleed', amount: 2, target: 'enemy' }]);
+    },
+  },
 };
 
 // --- RECETTES DE FUSION -------------------------------------------------
@@ -232,6 +282,8 @@ export const RECIPES = {
   'beargrease+katana': 'twinfang',
   'gauntlet+towershield': 'bulwark',
   'beargrease+venomblade': 'corrosion',
+  'bloodspike+venomblade': 'hemorrhage',
+  'bloodspike+katana': 'reaper',
 };
 
 // Calcule l'objet résultant de la fusion de deux objets.
@@ -316,11 +368,24 @@ export const ENEMIES = {
   },
 };
 
-// Pools d'ennemis par type de nœud.
-export const ENEMY_POOLS = {
-  combat: ['slime', 'bat', 'golem'],
-  elite: ['brute'],
-  boss: ['guardian'],
+// Groupes d'ennemis (rencontres) par type de nœud. Un combat peut opposer
+// plusieurs ennemis ; le joueur choisit sa cible (ou frappe tout le monde).
+export const ENCOUNTERS = {
+  combat: [
+    ['slime'],
+    ['bat', 'bat'],
+    ['golem'],
+    ['slime', 'bat'],
+    ['bat', 'bat', 'bat'],
+    ['slime', 'slime'],
+  ],
+  elite: [
+    ['brute'],
+    ['brute', 'bat'],
+  ],
+  boss: [
+    ['guardian'],
+  ],
 };
 
 // --- ÉVÉNEMENTS ---------------------------------------------------------

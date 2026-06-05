@@ -125,6 +125,12 @@ export function cardArtSVG(art) {
   if (art === 'flame') return wrap(`
     <path d="M32 6 q14 16 14 30 a14 14 0 0 1 -28 0 q0 -10 14 -30z" fill="#ff8a3d" stroke="${OUT}" stroke-width="3"/>
     <path d="M32 24 q7 8 7 14 a7 7 0 0 1 -14 0 q0 -5 7 -14z" fill="#ffd84d"/>`);
+  if (art === 'whirl') return wrap(`
+    <path d="M32 32 q-22 -6 -24 -26 q18 6 24 26z" fill="#9aa7b4" stroke="${OUT}" stroke-width="3"/>
+    <path d="M32 32 q22 6 24 26 q-18 -6 -24 -26z" fill="#9aa7b4" stroke="${OUT}" stroke-width="3"/>
+    <path d="M32 32 q6 -22 26 -24 q-6 18 -26 24z" fill="#cfd6de" stroke="${OUT}" stroke-width="3"/>
+    <path d="M32 32 q-6 22 -26 24 q6 -18 26 -24z" fill="#cfd6de" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="32" cy="32" r="5" fill="#f4d35e" stroke="${OUT}" stroke-width="2"/>`);
   return wrap('');
 }
 
@@ -161,5 +167,9 @@ export function relicSVG(art) {
     <circle cx="18" cy="26" r="12" fill="#7d5fff" stroke="${OUT}" stroke-width="3"/>
     <circle cx="30" cy="22" r="12" fill="#5fd35f" stroke="${OUT}" stroke-width="3"/>
     <circle cx="24" cy="24" r="5" fill="#fff" opacity=".8"/>`);
+  if (art === 'blood') return wrap(`
+    <path d="M16 38 q18 -28 30 -34 l2 4 q-12 10 -28 34 z" fill="#cfd6de" stroke="${OUT}" stroke-width="3"/>
+    <path d="M22 30 q3 6 1 10 a3 3 0 0 1 -6 0 q0 -4 5 -10z" fill="#e23d57" stroke="${OUT}" stroke-width="2"/>
+    <rect x="12" y="34" width="12" height="6" rx="3" fill="${OUT}"/>`);
   return wrap('');
 }

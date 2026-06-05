@@ -1,7 +1,7 @@
 // Rendu DOM — dispatcher de scènes. Lit l'état (app) et le dessine.
 // Aucune règle de jeu ici : tout vient du moteur (engine/).
 import { CARDS, RELICS, STATUSES, EVENTS, fusionPreview } from '../engine/content.js';
-import { previewCard, enemyIntentPreview } from '../engine/combat.js';
+import { previewCard, intentPreview, aliveEnemies } from '../engine/combat.js';
 import { reachableNodes } from '../engine/run.js';
 import { spriteSVG, cardArtSVG, relicSVG } from './assets.js';
 
@@ -13,6 +13,7 @@ const NODE_META = {
   event:    { icon: '❓', label: 'Événement' },
   rest:     { icon: '🔥', label: 'Repos' },
   forge:    { icon: '⚒️', label: 'Forge' },
+  shop:     { icon: '🛒', label: 'Boutique' },
   treasure: { icon: '💎', label: 'Trésor' },
   boss:     { icon: '👑', label: 'Boss' },
 };
@@ -26,6 +27,7 @@ export function render(root, app) {
     case 'reward': body = rewardView(app); break;
     case 'rest': body = restView(app); break;
     case 'forge': body = forgeView(app); break;
+    case 'shop': body = shopView(app); break;
     case 'event': body = eventView(app); break;
     case 'gameover': body = endView(app, false); break;
     case 'victory': body = endView(app, true); break;
@@ -44,6 +46,7 @@ function header(app) {
     <h1>🏔️ Climb the Spire</h1>
     <div class="run-stats">
       <span class="chip hp">❤️ ${hp}/${run.maxHp}</span>
+      <span class="chip gold">💰 ${run.gold}</span>
       <span class="chip">Étage ${run.depth}</span>
       <span class="relic-strip">${relics}</span>
     </div>
@@ -112,9 +115,9 @@ function statusPills(ent) {
     return `<span class="pill" style="background:${s.color}" title="${esc(s.name)} — ${esc(s.desc)}">${s.name[0]}<b>${ent.statuses[k]}</b></span>`;
   }).join('')}</div>`;
 }
-function intentBadge(state) {
-  const it = enemyIntentPreview(state);
-  if (!it || state.phase !== 'combat') return '';
+function intentBadge(enemy, phase) {
+  const it = intentPreview(enemy);
+  if (!it || phase !== 'combat') return '';
   let icon = '❔', txt = '';
   if (it.type === 'attack') { icon = '⚔️'; txt = `${it.value}${it.times > 1 ? ` ×${it.times}` : ''}`; }
   else if (it.type === 'defend') { icon = '🛡️'; txt = `${it.value}`; }
@@ -129,7 +132,7 @@ function combatCard(state, card) {
   const pv = previewCard(state, def);
   const playable = state.phase === 'combat' && state.turn === 'player' && def.cost <= state.energy.cur;
   let stats = '';
-  if (pv.damage) stats += `<span class="stat dmg">${pv.damage}${pv.hits > 1 ? `<small>×${pv.hits}</small>` : ''} dégâts</span>`;
+  if (pv.damage) stats += `<span class="stat dmg">${pv.damage} dégâts${pv.hits > 1 ? ` <small>(${pv.hits} coups)</small>` : ''}${pv.aoe ? ' <small>(tous)</small>' : ''}</span>`;
   if (pv.block) stats += `<span class="stat blk">${pv.block} blocs</span>`;
   const st = pv.statuses.map((s) => `+${s.amount} ${STATUSES[s.status].name}`).join(', ');
   if (st) stats += `<span class="stat sts">${esc(st)}</span>`;
@@ -142,17 +145,27 @@ function combatCard(state, card) {
     ${pv.modified ? '<span class="boost-flag">★ objet</span>' : ''}
   </button>`;
 }
+function enemyEl(s, enemy) {
+  const dead = enemy.hp <= 0;
+  const targeted = !dead && s.targetUid === enemy.uid && aliveEnemies(s).length > 1;
+  const cls = ['combatant', 'enemy', dead ? 'dead' : '', targeted ? 'targeted' : ''].join(' ');
+  return `<div class="${cls}" ${dead ? '' : `data-enemy="${enemy.uid}"`}>
+    ${dead ? '' : intentBadge(enemy, s.phase)}
+    ${targeted ? '<div class="target-marker">🎯</div>' : ''}
+    <div class="sprite">${spriteSVG(enemy.art)}${blockBadge(enemy)}</div>
+    <div class="name">${esc(enemy.name)}</div>
+    ${hpBar(enemy)}
+    ${statusPills(enemy)}
+  </div>`;
+}
 function combatView(app) {
   const s = app.combat;
+  const tier = s.enemies.some((e) => e.tier === 'boss') ? 'boss'
+    : s.enemies.some((e) => e.tier === 'elite') ? 'elite' : 'normal';
+  const multi = aliveEnemies(s).length > 1;
   return `
-    <section class="arena ${s.enemy.tier}">
-      <div class="combatant enemy">
-        ${intentBadge(s)}
-        <div class="sprite">${spriteSVG(s.enemy.art)}${blockBadge(s.enemy)}</div>
-        <div class="name">${esc(s.enemy.name)}</div>
-        ${hpBar(s.enemy)}
-        ${statusPills(s.enemy)}
-      </div>
+    <section class="arena ${tier}">
+      <div class="enemies">${s.enemies.map((e) => enemyEl(s, e)).join('')}</div>
       <div class="vs">⚔️</div>
       <div class="combatant player">
         <div class="sprite">${spriteSVG('hero')}${blockBadge(s.player)}</div>
@@ -161,6 +174,7 @@ function combatView(app) {
         ${statusPills(s.player)}
       </div>
     </section>
+    ${multi ? '<div class="target-hint">🎯 Clique un ennemi pour le cibler — les attaques simples le visent.</div>' : ''}
     <section class="hud">
       <div class="energy" title="Énergie">⚡ <b>${s.energy.cur}</b>/${s.energy.max}</div>
       <button class="btn end" data-action="endturn" ${s.phase !== 'combat' ? 'disabled' : ''}>Finir le tour ↻</button>
@@ -197,6 +211,7 @@ function rewardView(app) {
   // récompense de combat
   return `<section class="panel reward">
     <h2>${rw.isBoss ? '🏆 Boss vaincu !' : '✨ Victoire !'}</h2>
+    ${rw.gold ? `<div class="gold-banner">💰 +${rw.gold} or</div>` : ''}
     ${rw.relic ? `<div class="relic-banner">Objet obtenu : ${relicSVG(RELICS[rw.relic].art)} <b>${esc(RELICS[rw.relic].name)}</b> — ${esc(RELICS[rw.relic].text)}</div>` : ''}
     <p>Ajoute une carte à ton deck :</p>
     <div class="card-choices">${rw.cards.map((id) => staticCard(id, 'pick-card')).join('')}</div>
@@ -261,6 +276,35 @@ function forgeView(app) {
       <button class="btn big" data-action="forge" ${canForge ? '' : 'disabled'}>🔨 Forger</button>
       <button class="btn" data-action="leave-forge">Quitter sans forger</button>
     </div>
+  </section>`;
+}
+
+// --- Vue BOUTIQUE -------------------------------------------------------
+function shopView(app) {
+  const run = app.run;
+  const items = app.shop.items.map((it, i) => {
+    const afford = run.gold >= it.price && !it.sold;
+    let inner;
+    if (it.kind === 'card') {
+      const d = CARDS[it.id];
+      inner = `<span class="shop-cost-badge">${d.cost}</span>${cardArtSVG(d.art)}<b>${esc(d.name)}</b><span class="desc">${esc(d.text)}</span>`;
+    } else if (it.kind === 'relic') {
+      const r = RELICS[it.id];
+      inner = `${relicSVG(r.art)}<b>${esc(r.name)}</b><span class="desc">${esc(r.text)}</span>`;
+    } else {
+      inner = `<div class="heal-ic">➕</div><b>Soin</b><span class="desc">Récupère ${it.amount} PV.</span>`;
+    }
+    return `<button class="shop-item ${it.sold ? 'sold' : ''}" ${afford ? '' : 'disabled'}
+        data-action="buy" data-idx="${i}">
+      ${inner}
+      <span class="price">${it.sold ? 'VENDU' : `💰 ${it.price}`}</span>
+    </button>`;
+  }).join('');
+  return `<section class="panel shop">
+    <h2>🛒 Boutique</h2>
+    <p class="muted">Tu as <b>💰 ${run.gold} or</b>. Dépense-le judicieusement.</p>
+    <div class="shop-grid">${items}</div>
+    <button class="btn big" data-action="leave-shop">Quitter la boutique</button>
   </section>`;
 }
 
